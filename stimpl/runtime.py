@@ -66,7 +66,11 @@ def evaluate(expression, state):
       return (*value, state)
 
     case Sequence(exprs = exprs) | Program(exprs = exprs):
-      pass
+      if type(exprs[0]) is Assign:    # Checking that the call is for variable assignment
+        value_result, value_type, new_state = evaluate(exprs[0], state)
+      else:                           # If the variable hasn't been declared yet, raise an error
+        raise InterpSyntaxError(f"Cannot read from variable before assignment")
+      return(value_result, value_type, new_state)
 
     case Assign(variable=variable, value=value):
 
@@ -100,13 +104,49 @@ def evaluate(expression, state):
       return (result, left_type, new_state)
 
     case Subtract(left=left, right=right):
-      pass
+      result = 0
+      left_result, left_type, new_state = evaluate(left, state)
+      right_result, right_type, new_state = evaluate(right, new_state)
+
+      if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
+        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+      
+      match left_type:                   #Only need to match for 1 type since they will be the same at this point
+        case Integer() | FloatingPoint():
+          result = left_result - right_result
+        case _:
+          raise InterpTypeError(f"Cannot add {left_type}'s")
+      return (result, left_type, new_state)
 
     case Multiply(left=left, right=right):
-      pass
+      result = 0
+      left_result, left_type, new_state = evaluate(left, state)
+      right_result, right_type, new_state = evaluate(right, new_state)
+
+      if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
+        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+      
+      match left_type:                   #Only need to match for 1 type since they will be the same at this point
+        case Integer() | FloatingPoint():
+          result = left_result * right_result
+        case _:
+          raise InterpTypeError(f"Cannot add {left_type}'s")
+      return (result, left_type, new_state)
 
     case Divide(left=left, right=right):
-      pass
+      result = 0
+      left_result, left_type, new_state = evaluate(left, state)
+      right_result, right_type, new_state = evaluate(right, new_state)
+
+      if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
+        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+      
+      match left_type:                   #Only need to match for 1 type since they will be the same at this point
+        case Integer() | FloatingPoint():
+          result = left_result / right_result
+        case _:
+          raise InterpTypeError(f"Cannot add {left_type}'s")
+      return (result, left_type, new_state)
 
     case And(left=left, right=right):
       left_value, left_type, new_state = evaluate(left, state)
@@ -124,10 +164,30 @@ def evaluate(expression, state):
       return (result, left_type, new_state)
 
     case Or(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for And: 
+            Cannot add {left_type} to {right_type}""")
+      match left_type:
+        case Boolean():
+          result = left_value or right_value
+        case _:
+          raise InterpTypeError("Cannot perform logical and on non-boolean operands.")
+
+      return (result, left_type, new_state)
 
     case Not(expr=expr):
-      pass
+      new_value, new_type, new_state = evaluate(expr, state)
+
+      match new_type:
+        case Boolean():
+          result = not(new_value)
+        case _:
+          raise InterpTypeError("Cannot perform logical and on non-boolean operands.")
+
+      return (result, new_type, new_state)
 
     case If(condition=condition, true=true, false=false):
       pass
@@ -153,19 +213,104 @@ def evaluate(expression, state):
       return (result, Boolean(), new_state)
 
     case Lte(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      result = None
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for Lte: 
+            Cannot compare {left_type} to {right_type}""")
+
+      match left_type:
+        case Integer() | Boolean() | String() | FloatingPoint():
+          result = left_value <= right_value
+        case Unit():
+          result = True     # Variables of type Unit will always be equal
+        case _:
+          raise InterpTypeError(f"Cannot perform <= on {left_type} type.")
+
+      return (result, Boolean(), new_state)
 
     case Gt(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      result = None
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for Gt: 
+            Cannot compare {left_type} to {right_type}""")
+
+      match left_type:
+        case Integer() | Boolean() | String() | FloatingPoint():
+          result = left_value > right_value
+        case Unit():
+          result = False
+        case _:
+          raise InterpTypeError(f"Cannot perform > on {left_type} type.")
+
+      return (result, Boolean(), new_state)
 
     case Gte(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      result = None
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for Gte: 
+            Cannot compare {left_type} to {right_type}""")
+
+      match left_type:
+        case Integer() | Boolean() | String() | FloatingPoint():
+          result = left_value >= right_value
+        case Unit():
+          result = True         # Variables of type Unit will always be equal
+        case _:
+          raise InterpTypeError(f"Cannot perform >= on {left_type} type.")
+
+      return (result, Boolean(), new_state)
 
     case Eq(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      result = None
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for Eq: 
+            Cannot compare {left_type} to {right_type}""")
+
+      match left_type:
+        case Integer() | Boolean() | String() | FloatingPoint():
+          result = left_value == right_value
+        case Unit():
+          result = True
+        case _:
+          raise InterpTypeError(f"Cannot perform == on {left_type} type.")
+
+      return (result, Boolean(), new_state)
 
     case Ne(left=left, right=right):
-      pass
+      left_value, left_type, new_state = evaluate(left, state)
+      right_value, right_type, new_state = evaluate(right, new_state)
+
+      result = None
+
+      if left_type != right_type:
+        raise InterpTypeError(f"""Mismatched types for Ne: 
+            Cannot compare {left_type} to {right_type}""")
+
+      match left_type:
+        case Integer() | Boolean() | String() | FloatingPoint():
+          result = left_value != right_value
+        case Unit():
+          result = False
+        case _:
+          raise InterpTypeError(f"Cannot perform != on {left_type} type.")
+
+      return (result, Boolean(), new_state)
 
     case While(condition=condition, body=body):
       pass
@@ -174,7 +319,7 @@ def evaluate(expression, state):
       raise InterpSyntaxError("Unhandled!")
   pass
 
-def run_stimpl(program, debug=False):
+def run_stimpl(program, debug=True):
   state = State()
   program_value, program_type, program_state = evaluate(program, state)
 
