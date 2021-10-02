@@ -329,13 +329,13 @@ def run_stimpl_sanity_tests():
 
     ## Make sure that While loops work! (10 pts)
     program = Program(\
-        Assign(Variable("j"), IntLiteral(0)),\
-        While(Lt(Variable("j"), IntLiteral(10)),\
-          Sequence(\
-            Assign(Variable("j"), Add(Variable("j"), IntLiteral(1))),\
-            )\
+      Assign(Variable("j"), IntLiteral(0)),\
+      While(Lt(Variable("j"), IntLiteral(10)),\
+        Sequence(\
+          Assign(Variable("j"), Add(Variable("j"), IntLiteral(1))),\
           )\
-        )
+        )\
+      )
     run_value, run_type, run_state = run_stimpl(program)
     check_equal((10, Integer()), run_state.get_value("j"))
 

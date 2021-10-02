@@ -112,13 +112,13 @@ def evaluate(expression, state):
       right_result, right_type, new_state = evaluate(right, new_state)
 
       if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
-        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+        raise InterpTypeError(f"Mismatched types for Subtract: Cannot subtract {right_type} from {left_type}")
       
       match left_type:                   #Only need to match for 1 type since they will be the same at this point
         case Integer() | FloatingPoint():
           result = left_result - right_result
         case _:
-          raise InterpTypeError(f"Cannot add {left_type}'s")
+          raise InterpTypeError(f"Cannot subtract {left_type}'s")
       return (result, left_type, new_state)
 
     case Multiply(left=left, right=right):
@@ -127,13 +127,13 @@ def evaluate(expression, state):
       right_result, right_type, new_state = evaluate(right, new_state)
 
       if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
-        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+        raise InterpTypeError(f"Mismatched types for Multiply: Cannot multiply {left_type} and {right_type}")
       
       match left_type:                   #Only need to match for 1 type since they will be the same at this point
         case Integer() | FloatingPoint():
           result = left_result * right_result
         case _:
-          raise InterpTypeError(f"Cannot add {left_type}'s")
+          raise InterpTypeError(f"Cannot multiply {left_type}'s")
       return (result, left_type, new_state)
 
     case Divide(left=left, right=right):
@@ -142,13 +142,13 @@ def evaluate(expression, state):
       right_result, right_type, new_state = evaluate(right, new_state)
 
       if left_type != right_type:             #Comparing Left and Right types to ensure they are the same
-        raise InterpTypeError(f"Mismatched types for Subtract: Cannot add {left_type} to {right_type}")
+        raise InterpTypeError(f"Mismatched types for Divide: Cannot divide {left_type} and {right_type}")
       
       match left_type:                   #Only need to match for 1 type since they will be the same at this point
         case Integer() | FloatingPoint():
           result = left_result / right_result
         case _:
-          raise InterpTypeError(f"Cannot add {left_type}'s")
+          raise InterpTypeError(f"Cannot divide {left_type}'s")
       return (result, left_type, new_state)
 
     case And(left=left, right=right):
@@ -329,12 +329,11 @@ def evaluate(expression, state):
       condition_result, condition_type, new_state = evaluate(condition, state)
       match condition_type:
         case Boolean():
-          if condition_result:
-            print("true")
-          else:
+          while(condition_result):
             body_result, body_type, new_state = evaluate(body, new_state)
-            final_result, final_type, new_state = evaluate(condition, body)
-            return (final_result, final_type, new_state)
+            condition_result, condition_type, new_state = evaluate(condition, new_state)
+          print("finished")
+          return (body_result, body_type, new_state)
         case _:
           raise InterpTypeError(f"Cannot evaluate non-boolean conditional")
 
