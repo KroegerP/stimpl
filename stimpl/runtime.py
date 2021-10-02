@@ -66,10 +66,13 @@ def evaluate(expression, state):
       return (*value, state)
 
     case Sequence(exprs = exprs) | Program(exprs = exprs):
-      if type(exprs[0]) is Assign:    # Checking that the call is for variable assignment
-        value_result, value_type, new_state = evaluate(exprs[0], state)
-      else:                           # If the variable hasn't been declared yet, raise an error
-        raise InterpSyntaxError(f"Cannot read from variable before assignment")
+      new_state = state
+      for i in range(len(exprs)):
+        if type(exprs[i]) is Assign:    # Checking that the call is for variable assignment
+          value_result, value_type, new_state = evaluate(exprs[i], new_state)
+        else:                           # If the variable hasn't been declared yet, raise an error
+          value_result, value_type, new_state = evaluate(exprs[i], new_state)
+          # raise InterpSyntaxError(f"Cannot read from variable before assignment")
       return(value_result, value_type, new_state)
 
     case Assign(variable=variable, value=value):
@@ -190,7 +193,17 @@ def evaluate(expression, state):
       return (result, new_type, new_state)
 
     case If(condition=condition, true=true, false=false):
-      pass
+      condition_result, condition_type, new_state = evaluate(condition, state)
+      match condition_type:
+        case Boolean():
+          if(condition_result):
+            true_result, true_type, new_state = evaluate(true, new_state)
+            return (true_result, true_type, new_state)
+          else:
+            false_result, false_type, new_state = evaluate(false, new_state)
+            return(false_result, false_type, new_state)
+        case _:
+          raise InterpTypeError(f"Cannot evaluate non-boolean conditional")
 
     case Lt(left=left, right=right):
       left_value, left_type, new_state = evaluate(left, state)
@@ -313,7 +326,18 @@ def evaluate(expression, state):
       return (result, Boolean(), new_state)
 
     case While(condition=condition, body=body):
-      pass
+      condition_result, condition_type, new_state = evaluate(condition, state)
+      match condition_type:
+        case Boolean():
+          if condition_result:
+            print("true")
+          else:
+            body_result, body_type, new_state = evaluate(body, new_state)
+            final_result, final_type, new_state = evaluate(condition, body)
+            return (final_result, final_type, new_state)
+        case _:
+          raise InterpTypeError(f"Cannot evaluate non-boolean conditional")
+
 
     case _:
       raise InterpSyntaxError("Unhandled!")
