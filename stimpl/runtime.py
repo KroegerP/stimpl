@@ -145,8 +145,10 @@ def evaluate(expression, state):
         raise InterpTypeError(f"Mismatched types for Divide: Cannot divide {left_type} and {right_type}")
       
       match left_type:                   #Only need to match for 1 type since they will be the same at this point
-        case Integer() | FloatingPoint():
+        case FloatingPoint():
           result = left_result / right_result
+        case Integer():
+          result = left_result // right_result
         case _:
           raise InterpTypeError(f"Cannot divide {left_type}'s")
       return (result, left_type, new_state)
