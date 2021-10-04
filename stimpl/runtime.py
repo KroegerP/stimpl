@@ -66,7 +66,7 @@ def evaluate(expression, state):
       return (*value, state)
 
     case Sequence(exprs = exprs) | Program(exprs = exprs):
-      new_state = state                     # Making this assignment to make the for loop easier               
+      new_state = state             # Making this assignment to make the for loop easier - Can just reassign new_state each time              
       for i in range(len(exprs)):
         value_result, value_type, new_state = evaluate(exprs[i], new_state) # Evaluating all parts of the Program/Sequence call
       return(value_result, value_type, new_state)
@@ -160,7 +160,7 @@ def evaluate(expression, state):
         case Boolean():
           result = left_value and right_value
         case _:
-          raise InterpTypeError("Cannot perform logical and on non-boolean operands.")
+          raise InterpTypeError("Cannot perform logical And on non-boolean operands.")
  
       return (result, left_type, new_state)
 
@@ -175,7 +175,7 @@ def evaluate(expression, state):
         case Boolean():
           result = left_value or right_value
         case _:
-          raise InterpTypeError("Cannot perform logical and on non-boolean operands.")
+          raise InterpTypeError("Cannot perform logical Or on non-boolean operands.")
 
       return (result, left_type, new_state)
 
@@ -184,9 +184,9 @@ def evaluate(expression, state):
 
       match new_type:
         case Boolean():
-          result = not(new_value)
+          result = not(new_value)   # Not operation performed here
         case _:
-          raise InterpTypeError("Cannot perform logical and on non-boolean operands.")
+          raise InterpTypeError("Cannot perform logical Not on non-boolean operands.")
 
       return (result, new_type, new_state)
 
@@ -295,9 +295,9 @@ def evaluate(expression, state):
 
       match left_type:
         case Integer() | Boolean() | String() | FloatingPoint():
-          result = left_value == right_value
+          result = left_value == right_value    # Equal comparision performed here
         case Unit():
-          result = True
+          result = True       # Unit type variables will always be equal
         case _:
           raise InterpTypeError(f"Cannot perform == on {left_type} type.")
 
@@ -315,7 +315,7 @@ def evaluate(expression, state):
 
       match left_type:
         case Integer() | Boolean() | String() | FloatingPoint():
-          result = left_value != right_value
+          result = left_value != right_value        # Not equal performed here
         case Unit():
           result = False
         case _:
@@ -326,13 +326,12 @@ def evaluate(expression, state):
     case While(condition=condition, body=body):
       condition_result, condition_type, new_state = evaluate(condition, state)
       match condition_type:
-        case Boolean():
-          while(condition_result):        # Checks the condition for true or false
-            body_result, body_type, new_state = evaluate(body, new_state)
+        case Boolean():                   # Condition can only be boolean
+          while(condition_result):
+            body_result, body_type, new_state = evaluate(body, new_state)   # Evaluate body to update the state for condition if applicable
             condition_result, condition_type, new_state = evaluate(condition, new_state) # Reevaluates condition before next 
           print("finished")
-          return (condition_result, condition_type, new_state)
-          # return (body_result, body_type, new_state)
+          return (condition_result, condition_type, new_state) # Return the final value of the while loop condition (false, boolean)
         case _:
           raise InterpTypeError(f"Cannot evaluate non-boolean conditional")
     case _:
