@@ -327,15 +327,14 @@ def evaluate(expression, state):
       condition_result, condition_type, new_state = evaluate(condition, state)
       match condition_type:
         case Boolean():
-          while(condition_result):
+          while(condition_result):        # Checks the condition for true or false
             body_result, body_type, new_state = evaluate(body, new_state)
-            condition_result, condition_type, new_state = evaluate(condition, new_state)
+            condition_result, condition_type, new_state = evaluate(condition, new_state) # Reevaluates condition before next 
           print("finished")
-          return (body_result, body_type, new_state)
+          return (condition_result, condition_type, new_state)
+          # return (body_result, body_type, new_state)
         case _:
           raise InterpTypeError(f"Cannot evaluate non-boolean conditional")
-
-
     case _:
       raise InterpSyntaxError("Unhandled!")
   pass
