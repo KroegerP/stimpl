@@ -66,13 +66,9 @@ def evaluate(expression, state):
       return (*value, state)
 
     case Sequence(exprs = exprs) | Program(exprs = exprs):
-      new_state = state
+      new_state = state                     # Making this assignment to make the for loop easier               
       for i in range(len(exprs)):
-        if type(exprs[i]) is Assign:    # Checking that the call is for variable assignment
-          value_result, value_type, new_state = evaluate(exprs[i], new_state)
-        else:                           # If the variable hasn't been declared yet, raise an error
-          value_result, value_type, new_state = evaluate(exprs[i], new_state)
-          # raise InterpSyntaxError(f"Cannot read from variable before assignment")
+        value_result, value_type, new_state = evaluate(exprs[i], new_state) # Evaluating all parts of the Program/Sequence call
       return(value_result, value_type, new_state)
 
     case Assign(variable=variable, value=value):
@@ -145,9 +141,9 @@ def evaluate(expression, state):
         raise InterpTypeError(f"Mismatched types for Divide: Cannot divide {left_type} and {right_type}")
       
       match left_type:                   #Only need to match for 1 type since they will be the same at this point
-        case FloatingPoint():
+        case FloatingPoint():            # Can perform normal division on floating points
           result = left_result / right_result
-        case Integer():
+        case Integer():                  # If the type is integer, we want to perform integer division rather than normal division
           result = left_result // right_result
         case _:
           raise InterpTypeError(f"Cannot divide {left_type}'s")
